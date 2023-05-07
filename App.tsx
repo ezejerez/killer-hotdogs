@@ -1,7 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { Button, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Button, ColorSchemeName, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { palette } from "./styles";
+import { ToggleThemeIcon } from "./assets/Icons";
+import { Appearance, useColorScheme } from "react-native";
 
 function joinArray(arr: string[]): string {
   if (!arr.length) return "";
@@ -50,8 +52,10 @@ function getTimeString(hotdogCount: number): string {
 }
 
 export default function App() {
+  const colorScheme = useColorScheme();
+
   const [hotdogCount, setHotdogCount] = useState<number>(0);
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(colorScheme);
 
   const styles = getStyles(theme);
 
@@ -107,15 +111,11 @@ export default function App() {
     <View style={styles.container}>
       <View style={styles.themeToggler}>
         <TouchableOpacity onPress={handleToggleTheme}>
-          {theme === "light" ? (
-            <Image source={require("./assets/light-theme-icon.svg")} style={{ backgroundColor: "#841584", height: 30, width: 30 }} />
-          ) : (
-            <Image source={require("./assets/light-theme-icon.svg")} style={{ backgroundColor: "red", height: 30, width: 30 }} />
-          )}
+          <ToggleThemeIcon width={25} height={25} fill={palette[theme || "light"].color} />
         </TouchableOpacity>
       </View>
 
-      <Image source={require("./assets/devil-hotdog-logo.png")} style={{ backgroundColor: "#841584", height: 130, width: 130 }} />
+      <Image source={require("./assets/logo.png")} style={{ height: 130, width: 130 }} />
       <View style={{ justifyContent: "space-between", height: 400 }}>
         <MainText />
 
@@ -133,15 +133,15 @@ export default function App() {
   );
 }
 
-const getStyles = (theme: string) =>
+const getStyles = (theme: ColorSchemeName) =>
   StyleSheet.create({
     container: {
       flex: 1,
       flexDirection: "column",
-      backgroundColor: palette[theme].backgroundColor,
+      backgroundColor: palette[theme || "light"].backgroundColor,
       alignItems: "center",
       justifyContent: "space-around",
-      color: palette[theme].color,
+      color: palette[theme || "light"].color,
       paddingLeft: 15,
       paddingRight: 15,
       textAlign: "center",
@@ -149,18 +149,18 @@ const getStyles = (theme: string) =>
 
     mainText: {
       textAlign: "center",
-      color: palette[theme].color,
+      color: palette[theme || "light"].color,
       fontSize: 18,
     },
 
     secondaryText: {
-      color: palette[theme].color,
+      color: palette[theme || "light"].color,
       fontWeight: "500",
       fontSize: 18,
     },
 
     timeStats: {
-      color: palette[theme].color,
+      color: palette[theme || "light"].color,
       fontWeight: "700",
       fontSize: 24,
     },
