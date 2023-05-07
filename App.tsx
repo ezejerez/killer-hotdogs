@@ -1,9 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { Button, ColorSchemeName, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { palette } from "./styles";
+import { Button, ColorSchemeName, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { ToggleThemeIcon } from "./assets/Icons";
-import { Appearance, useColorScheme } from "react-native";
+import { palette } from "./styles";
 
 function joinArray(arr: string[]): string {
   if (!arr.length) return "";
