@@ -2,59 +2,34 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { Button, ColorSchemeName, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { ToggleThemeIcon } from "./assets/Icons";
+import Modal, { ModalProps } from "./components/Modal";
 import { palette } from "./styles";
+import { getTimeString } from "./utils";
 
-function joinArray(arr: string[]): string {
-  if (!arr.length) return "";
-  else if (arr.length === 1) return arr[0];
-  else if (arr.length === 2) return `${arr[0]} y ${arr[1]}`;
-  else {
-    const last = arr.slice(-1);
-    const rest = arr.slice(0, -1);
+const MODAL_PROPS: { [key: string]: Pick<ModalProps, "title" | "description"> } = {
+  add: {
+    title: "Añadir",
+    description: "¿Estás seguro/a de añadir 1 pancho?",
+  },
 
-    return `${rest.join(", ")} y ${last}`;
-  }
-}
+  remove: {
+    title: "Eliminar",
+    description: "¿Estás seguro/a de eliminar 1 pancho?",
+  },
 
-function getTimeString(hotdogCount: number): string {
-  if (!hotdogCount || hotdogCount === 0) return "";
-
-  const intervals = [
-    { label: "año", seconds: 31_536_000 },
-    { label: "mes", seconds: 2_592_000 },
-    { label: "semana", seconds: 604_800 },
-    { label: "día", seconds: 86_400 },
-    { label: "hora", seconds: 3600 },
-    { label: "minuto", seconds: 60 },
-  ];
-
-  let remainingTime = hotdogCount * 1800;
-  let timeString = "";
-  let intervalsAdded: string[] = [];
-
-  for (const interval of intervals) {
-    const intervalCount = Math.floor(remainingTime / interval.seconds);
-    remainingTime -= intervalCount * interval.seconds;
-
-    const newSanitizedLabel = `${intervalCount} ${interval.label}${
-      interval.label === "mes" ? (intervalCount === 1 ? "" : "es") : intervalCount === 1 ? "" : "s"
-    }`;
-
-    if (intervalCount > 0) {
-      intervalsAdded = [...intervalsAdded, newSanitizedLabel];
-
-      timeString = joinArray(intervalsAdded);
-    }
-  }
-
-  return timeString;
-}
+  reset: {
+    title: "Reiniciar",
+    description: "¿Estás seguro/a de reiniciar tu historial?",
+  },
+};
 
 export default function App() {
   const colorScheme = useColorScheme();
 
   const [hotdogCount, setHotdogCount] = useState<number>(0);
   const [theme, setTheme] = useState(colorScheme);
+  const [openModal, setOpenModal] = useState<ModalProps["open"]>(false);
+  const [modalProps, setModalProps] = useState<Omit<ModalProps, "open" | "setOpen">>();
 
   const styles = getStyles(theme);
 
@@ -69,7 +44,20 @@ export default function App() {
     }
   };
 
-  const handlePressButton = () => setHotdogCount((prev) => prev + 1);
+  const handlePressAddButton = () => {
+    setModalProps({ ...MODAL_PROPS.add, action: () => setHotdogCount((prev) => prev + 1) });
+    setOpenModal(true);
+  };
+
+  const handlePressRemoveButton = () => {
+    setModalProps({ ...MODAL_PROPS.remove, action: () => setHotdogCount((prev) => prev - 1) });
+    setOpenModal(true);
+  };
+
+  const handlePressResetButton = () => {
+    setModalProps({ ...MODAL_PROPS.reset, action: () => setHotdogCount(0) });
+    setOpenModal(true);
+  };
 
   const handleToggleTheme = () => (theme === "light" ? setTheme("dark") : setTheme("light"));
 
@@ -107,28 +95,40 @@ export default function App() {
   }, [hotdogCount, theme]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.themeToggler}>
-        <TouchableOpacity onPress={handleToggleTheme}>
-          <ToggleThemeIcon width={25} height={25} fill={palette[theme || "light"].color} />
-        </TouchableOpacity>
-      </View>
+    <>
+      <View style={styles.container}>
+        <View style={styles.themeToggler}>
+          <TouchableOpacity onPress={handleToggleTheme}>
+            <ToggleThemeIcon width={25} height={25} fill={palette[theme || "light"].color} />
+          </TouchableOpacity>
+        </View>
 
-      <Image source={require("./assets/logo.png")} style={{ height: 130, width: 130 }} />
-      <View style={{ justifyContent: "space-between", height: 400 }}>
-        <MainText />
+        <Image source={require("./assets/logo.png")} style={{ height: 130, width: 130 }} />
+        <View style={{ justifyContent: "space-between", height: 400 }}>
+          <MainText />
 
-        {hotdogCount ? (
-          <View style={{ alignItems: "center" }}>
-            <Text style={styles.secondaryText}>Lo cual equivale a</Text>
-            <Text style={styles.timeStats}>{timeString}</Text>
-            <Text style={styles.secondaryText}>menos de vida 💀</Text>
+          {hotdogCount ? (
+            <View style={{ alignItems: "center" }}>
+              <Text style={styles.secondaryText}>Lo cual equivale a</Text>
+              <Text style={styles.timeStats}>{timeString}</Text>
+              <Text style={styles.secondaryText}>menos de vida 💀</Text>
+            </View>
+          ) : null}
+          <View style={{ justifyContent: "space-evenly", height: 150 }}>
+            <Button title={MODAL_PROPS.add.title!} onPress={handlePressAddButton} color="#841584" />
+            {hotdogCount ? (
+              <>
+                <Button title={MODAL_PROPS.remove.title!} onPress={handlePressRemoveButton} color="#841584" />
+                <Button title={MODAL_PROPS.reset.title!} onPress={handlePressResetButton} color="#841584" />
+              </>
+            ) : null}
           </View>
-        ) : null}
-        <Button title="Agregar" onPress={handlePressButton} color="#841584" />
+        </View>
+        <StatusBar />
       </View>
-      <StatusBar />
-    </View>
+
+      {modalProps && <Modal open={openModal} setOpen={setOpenModal} {...modalProps} />}
+    </>
   );
 }
 
